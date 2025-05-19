@@ -24,14 +24,6 @@ A Bash-powered Linux diagnostic & repair toolkit that:
 - 📼 Suggests real educational resources (YouTube, blogs)
 - 🤖 Terminal personality: MR. MACHINE
 
----
-
-## 📁 Project Structure
-
-mr-linmachnic/
-├── mr-machine # Main script (bash executable)
-├── README.md # This file
-└── mr-machine-diagnostics.txt # Logs
 
 
 ---
