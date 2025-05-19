@@ -1,0 +1,158 @@
+#!/bin/bash
+
+# ===============================
+# MR. MACHINE - by Madan Raj
+# ===============================
+# Linux Diagnostic and Repair Toolkit
+# For Kali Linux (VirtualBox), WSL, and Native Linux
+
+# Display ASCII Banner
+clear
+cat << "EOF"
+███████╗██████╗░  ███╗░░░███╗██████╗░  ███╗░░░███╗░█████╗░░█████╗░░█████╗░███╗░░██╗██╗███╗░░██╗███████╗
+██╔════╝██╔══██╗  ████╗░████║██╔══██╗  ████╗░████║██╔══██╗██╔══██╗██╔══██╗████╗░██║██║████╗░██║██╔════╝
+█████╗░░██████╦╝  ██╔████╔██║██████╦╝  ██╔████╔██║██║░░██║██║░░██║██║░░██║██╔██╗██║██║██╔██╗██║█████╗░░
+██╔══╝░░██╔══██╗  ██║╚██╔╝██║██╔══██╗  ██║╚██╔╝██║██║░░██║██║░░██║██║░░██║██║╚████║██║██║╚████║██╔══╝░░
+███████╗██████╦╝  ██║░╚═╝░██║██████╦╝  ██║░╚═╝░██║╚█████╔╝╚█████╔╝╚█████╔╝██║░╚███║██║██║░╚███║███████╗
+╚══════╝╚═════╝░  ╚═╝░░░░░╚═╝╚═════╝░  ╚═╝░░░░░╚═╝░╚════╝░░╚════╝░░╚════╝░╚═╝░░╚══╝╚═╝╚═╝░░╚══╝╚══════╝
+MR. MACHINE - by Madan Raj
+EOF
+
+# ========== GLOBAL VARS ==========
+YELLOW="\e[33m"
+RED="\e[31m"
+GREEN="\e[32m"
+CYAN="\e[36m"
+RESET="\e[0m"
+LOG_FILE="mr-machine-diagnostics.txt"
+
+# ========== HELPER FUNCS ==========
+log_result() {
+    echo -e "$1" | tee -a "$LOG_FILE"
+}
+
+pause() {
+    read -rp $'\nPress Enter to continue...'
+}
+
+# ========== MANUAL MODE ==========
+manual_mode() {
+    echo -e "${CYAN}\n[+] Entering Manual Mode...${RESET}"
+    PS3="Choose the issue you're facing (or 0 to exit): "
+    options=(
+        "Login/GUI not loading"
+        "Boot stuck / Boot logs"
+        "Network connectivity issues"
+        "Package manager problems"
+        "High memory/swap usage"
+        "Disk space / I/O issues"
+        "File permission problems"
+        "System monitoring/logging not working"
+        "Exit"
+    )
+
+    select opt in "${options[@]}"; do
+        case $REPLY in
+            1) 
+                echo -e "${YELLOW}Checking display manager and GUI...${RESET}"
+                sudo systemctl restart gdm || sudo service lightdm restart
+                log_result "Restarted display manager."
+                echo "Knowledge: https://linuxhint.com/linux_stuck_login_loop/"
+                echo "Video: https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+                ;;
+            2)
+                echo -e "${YELLOW}Viewing boot logs...${RESET}"
+                journalctl -b --no-pager | tee -a "$LOG_FILE"
+                ;;
+            3)
+                echo -e "${YELLOW}Testing network...${RESET}"
+                ping -c 4 8.8.8.8
+                ip a
+                ;;
+            4)
+                echo -e "${YELLOW}Fixing broken packages...${RESET}"
+                sudo apt update && sudo apt install -f && sudo dpkg --configure -a
+                ;;
+            5)
+                echo -e "${YELLOW}Checking memory...${RESET}"
+                free -h
+                top -o %MEM
+                ;;
+            6)
+                echo -e "${YELLOW}Checking disk usage...${RESET}"
+                df -h
+                iotop
+                ;;
+            7)
+                echo -e "${YELLOW}Fixing permissions...${RESET}"
+                sudo chmod -R 755 ~
+                ;;
+            8)
+                echo -e "${YELLOW}Checking system logs...${RESET}"
+                sudo du -sh /var/log/*
+                sudo journalctl --disk-usage
+                ;;
+            9|0)
+                echo -e "${RED}Exiting Manual Mode.${RESET}"
+                break
+                ;;
+            *)
+                echo -e "${RED}Invalid option, try again.${RESET}"
+                ;;
+        esac
+        pause
+    done
+}
+
+# ========== AI MODE (SKELETON) ==========
+ai_mode() {
+    echo -e "${CYAN}\n[+] Entering AI Mode...${RESET}"
+    echo -e "${YELLOW}Mr. MACHINE: Sir, what issue are you facing?${RESET}"
+    read -rp "Describe your issue: " user_issue
+
+    echo -e "\n${CYAN}[+] Running diagnostics...${RESET}"
+    uname -a >> "$LOG_FILE"
+    df -h >> "$LOG_FILE"
+    free -h >> "$LOG_FILE"
+    ip a >> "$LOG_FILE"
+    journalctl -xe >> "$LOG_FILE"
+    echo -e "${GREEN}Diagnostics saved to $LOG_FILE${RESET}"
+
+    echo -e "${YELLOW}Mr. MACHINE: Analyzing... (simulated AI)${RESET}"
+    sleep 2
+
+    if grep -q "Network is unreachable" "$LOG_FILE"; then
+        echo -e "${RED}Mr. MACHINE: Sir, seems like a Network Issue. Use Manual Mode.${RESET}"
+    else
+        echo -e "${GREEN}Mr. MACHINE: Potential fix commands running...${RESET}"
+        sudo apt update && sudo apt install -f && sudo dpkg --configure -a
+    fi
+
+    echo -e "\nKnowledge: https://book.hacktricks.xyz/"
+    echo -e "Videos from top cybersecurity YouTubers:"
+    echo " - Simplilearn: https://www.youtube.com/@SimplilearnOfficial"
+    echo " - Bitten Tech: https://www.youtube.com/@BittenTechOfficial"
+    echo " - TechHacker98: https://www.youtube.com/@TechHacker98"
+    echo " - Sattrix: https://www.youtube.com/@SattrixInformationSecurity"
+    echo " - Wipro: https://www.youtube.com/@WiproLimited"
+    pause
+}
+
+# ========== MAIN MENU ==========
+main_menu() {
+    echo -e "\n${GREEN}Welcome to MR. MACHINE - The Linux Mechanic${RESET}"
+    echo "1. Manual Mode"
+    echo "2. AI Mode"
+    echo "0. Exit"
+    read -rp "Select mode: " mode
+
+    case $mode in
+        1) manual_mode ;;
+        2) ai_mode ;;
+        0) echo -e "${RED}Exiting. Stay safe!${RESET}" ;;
+        *) echo -e "${RED}Invalid choice${RESET}" ;;
+    esac
+}
+
+# Start the script
+main_menu
