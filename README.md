@@ -1,6 +1,6 @@
 # MR-LINMACHNIC 🛠️
 
-> **Mr. LinMachine E - by Madan Raj**
+> **Mr. LinMachine  - by Madan Raj**
 
 # Mr. LinMachine  - Manual Mode
 
@@ -46,7 +46,7 @@ Some recommended tools that the script suggests using for troubleshooting might 
 1.  **Clone the repository:**
 
     ```bash
-    git clone [https://github.com/your-username/mr-machine-tool.git](https://github.com/your-username/mr-machine-tool.git)
+    git clone https://github.com/Rajnayak0/MR-LINMACHNIC.git
     cd mr-machine-tool
     ```
 
@@ -55,7 +55,7 @@ Some recommended tools that the script suggests using for troubleshooting might 
 2.  **Make the script executable:**
 
     ```bash
-    chmod +x mr_machine_tool.sh
+    chmod +x mr-machine
     ```
 
 ### Usage
@@ -63,7 +63,7 @@ Some recommended tools that the script suggests using for troubleshooting might 
 To run the "Mr. Machine Tool" script, execute it from your terminal:
 
 ```bash
-./mr_machine_tool.sh
+./mr-machine
 
 ---
 
