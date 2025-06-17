@@ -6,152 +6,539 @@
 # Linux Diagnostic and Repair Toolkit
 # For Kali Linux (VirtualBox), WSL, and Native Linux
 
-# Display ASCII Banner
-clear
-cat << "EOF"
-███████╗██████╗░  ███╗░░░███╗██████╗░  ███╗░░░███╗░█████╗░░█████╗░░█████╗░███╗░░██╗██╗███╗░░██╗███████╗
-██╔════╝██╔══██╗  ████╗░████║██╔══██╗  ████╗░████║██╔══██╗██╔══██╗██╔══██╗████╗░██║██║████╗░██║██╔════╝
-█████╗░░██████╦╝  ██╔████╔██║██████╦╝  ██╔████╔██║██║░░██║██║░░██║██║░░██║██╔██╗██║██║██╔██╗██║█████╗░░
-██╔══╝░░██╔══██╗  ██║╚██╔╝██║██╔══██╗  ██║╚██╔╝██║██║░░██║██║░░██║██║░░██║██║╚████║██║██║╚████║██╔══╝░░
-███████╗██████╦╝  ██║░╚═╝░██║██████╦╝  ██║░╚═╝░██║╚█████╔╝╚█████╔╝╚█████╔╝██║░╚███║██║██║░╚███║███████╗
-╚══════╝╚═════╝░  ╚═╝░░░░░╚═╝╚═════╝░  ╚═╝░░░░░╚═╝░╚════╝░░╚════╝░░╚════╝░╚═╝░░╚══╝╚═╝╚═╝░░╚══╝╚══════╝
-MR. MACHINE - by Madan Raj
-EOF
+#!/bin/bash
 
-# ========== GLOBAL VARS ==========
-YELLOW="\e[33m"
-RED="\e[31m"
-GREEN="\e[32m"
-CYAN="\e[36m"
-RESET="\e[0m"
-LOG_FILE="mr-machine-diagnostics.txt"
+# Mr. Machine Tool - Manual Mode
+# An interactive troubleshooting guide for common Linux system issues.
 
-# ========== HELPER FUNCS ==========
-log_result() {
-    echo -e "$1" | tee -a "$LOG_FILE"
+# Function to display a separator
+function separator {
+    echo "-----------------------------------------------------"
 }
 
-pause() {
-    read -rp $'\nPress Enter to continue...'
+# Function to pause for user input
+function press_enter_to_continue {
+    read -p "Press Enter to return to the previous menu..."
 }
 
-# ========== MANUAL MODE ==========
-manual_mode() {
-    echo -e "${CYAN}\n[+] Entering Manual Mode...${RESET}"
-    PS3="Choose the issue you're facing (or 0 to exit): "
-    options=(
-        "Login/GUI not loading"
-        "Boot stuck / Boot logs"
-        "Network connectivity issues"
-        "Package manager problems"
-        "High memory/swap usage"
-        "Disk space / I/O issues"
-        "File permission problems"
-        "System monitoring/logging not working"
-        "Exit"
-    )
+# Function for AI mode
+function ai_mode {
+    echo "Please explain your context for AI analysis."
+    exit 0
+}
 
-    select opt in "${options[@]}"; do
-        case $REPLY in
-            1) 
-                echo -e "${YELLOW}Checking display manager and GUI...${RESET}"
-                sudo systemctl restart gdm || sudo service lightdm restart
-                log_result "Restarted display manager."
-                echo "Knowledge: https://linuxhint.com/linux_stuck_login_loop/"
-                echo "Video: https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+# Function for System & Boot Issues
+function system_boot_menu {
+    while true; do
+        clear
+        echo "Mr. Machine Tool - Manual Mode"
+        separator
+        echo "System & Boot Issues:"
+        echo "1. System fails to boot due to corrupted GRUB configuration."
+        echo "2. Kernel panic caused by incompatible drivers or missing modules."
+        echo "3. Slow boot times due to unnecessary services running at startup."
+        echo "4. Incorrect time settings due to misconfigured NTP or system clock."
+        echo "5. System hanging during shutdown due to unresponsive processes."
+        echo "0. Back to Main Menu"
+        separator
+        read -p "Enter your choice: " choice
+
+        case $choice in
+            1)
+                clear
+                echo "Problem: System fails to boot due to corrupted GRUB configuration."
+                echo "Recommended Commands:"
+                echo "  sudo grub-install /dev/sdX (replace X with your boot drive, e.g., sda)"
+                echo "  sudo update-grub"
+                echo "If problem not solved, read this: [GRUB troubleshooting guide]"
+                press_enter_to_continue
                 ;;
             2)
-                echo -e "${YELLOW}Viewing boot logs...${RESET}"
-                journalctl -b --no-pager | tee -a "$LOG_FILE"
+                clear
+                echo "Problem: Kernel panic caused by incompatible drivers or missing modules."
+                echo "Recommended Commands:"
+                echo "  sudo dmesg | grep -i \"panic\""
+                echo "  sudo apt update && sudo apt upgrade (to update kernel and drivers)"
+                echo "  sudo mkinitramfs -o /boot/initrd.img-$(uname -r) $(uname -r)"
+                echo "If problem not solved, read this: [Kernel panic diagnostic tips], [Driver installation guide]"
+                press_enter_to_continue
                 ;;
             3)
-                echo -e "${YELLOW}Testing network...${RESET}"
-                ping -c 4 8.8.8.8
-                ip a
+                clear
+                echo "Problem: Slow boot times due to unnecessary services running at startup."
+                echo "Recommended Commands:"
+                echo "  systemd-analyze blame"
+                echo "  sudo systemctl disable <service_name> (replace <service_name> with the service you want to disable)"
+                echo "If problem not solved, read this: [Optimizing boot times]"
+                press_enter_to_continue
                 ;;
             4)
-                echo -e "${YELLOW}Fixing broken packages...${RESET}"
-                sudo apt update && sudo apt install -f && sudo dpkg --configure -a
+                clear
+                echo "Problem: Incorrect time settings due to misconfigured NTP or system clock."
+                echo "Recommended Commands:"
+                echo "  timedatectl status"
+                echo "  sudo timedatectl set-ntp true"
+                echo "  sudo timedatectl set-timezone Asia/Kolkata (or appropriate timezone, e.g., America/New_York)"
+                echo "If problem not solved, read this: [NTP configuration guide]"
+                press_enter_to_continue
                 ;;
             5)
-                echo -e "${YELLOW}Checking memory...${RESET}"
-                free -h
-                top -o %MEM
+                clear
+                echo "Problem: System hanging during shutdown due to unresponsive processes."
+                echo "Recommended Commands:"
+                echo "  sudo journalctl -xb | grep -i \"shutdown\""
+                echo "  sudo pkill -9 <process_ID> (as a last resort, replace <process_ID>)"
+                echo "If problem not solved, read this: [Troubleshooting shutdown issues]"
+                press_enter_to_continue
                 ;;
-            6)
-                echo -e "${YELLOW}Checking disk usage...${RESET}"
-                df -h
-                iotop
-                ;;
-            7)
-                echo -e "${YELLOW}Fixing permissions...${RESET}"
-                sudo chmod -R 755 ~
-                ;;
-            8)
-                echo -e "${YELLOW}Checking system logs...${RESET}"
-                sudo du -sh /var/log/*
-                sudo journalctl --disk-usage
-                ;;
-            9|0)
-                echo -e "${RED}Exiting Manual Mode.${RESET}"
+            0)
                 break
                 ;;
             *)
-                echo -e "${RED}Invalid option, try again.${RESET}"
+                echo "Invalid choice. Please try again."
+                press_enter_to_continue
                 ;;
         esac
-        pause
     done
 }
 
-# ========== AI MODE (SKELETON) ==========
-ai_mode() {
-    echo -e "${CYAN}\n[+] Entering AI Mode...${RESET}"
-    echo -e "${YELLOW}Mr. MACHINE: Sir, what issue are you facing?${RESET}"
-    read -rp "Describe your issue: " user_issue
+# Function for File System & Storage Problems
+function file_system_menu {
+    while true; do
+        clear
+        echo "Mr. Machine Tool - Manual Mode"
+        separator
+        echo "File System & Storage Problems:"
+        echo "1. Disk space running out due to excessive log files or orphaned data."
+        echo "2. File permissions preventing access to critical system files."
+        echo "3. Corrupted file system requiring manual fsck repair."
+        echo "4. Mounting issues with external drives or network shares."
+        echo "5. RAID array failures leading to data loss or degraded performance."
+        echo "0. Back to Main Menu"
+        separator
+        read -p "Enter your choice: " choice
 
-    echo -e "\n${CYAN}[+] Running diagnostics...${RESET}"
-    uname -a >> "$LOG_FILE"
-    df -h >> "$LOG_FILE"
-    free -h >> "$LOG_FILE"
-    ip a >> "$LOG_FILE"
-    journalctl -xe >> "$LOG_FILE"
-    echo -e "${GREEN}Diagnostics saved to $LOG_FILE${RESET}"
-
-    echo -e "${YELLOW}Mr. MACHINE: Analyzing... (simulated AI)${RESET}"
-    sleep 2
-
-    if grep -q "Network is unreachable" "$LOG_FILE"; then
-        echo -e "${RED}Mr. MACHINE: Sir, seems like a Network Issue. Use Manual Mode.${RESET}"
-    else
-        echo -e "${GREEN}Mr. MACHINE: Potential fix commands running...${RESET}"
-        sudo apt update && sudo apt install -f && sudo dpkg --configure -a
-    fi
-
-    echo -e "\nKnowledge: https://book.hacktricks.xyz/"
-    echo -e "Videos from top cybersecurity YouTubers:"
-    echo " - Simplilearn: https://www.youtube.com/@SimplilearnOfficial"
-    echo " - Bitten Tech: https://www.youtube.com/@BittenTechOfficial"
-    echo " - TechHacker98: https://www.youtube.com/@TechHacker98"
-    echo " - Sattrix: https://www.youtube.com/@SattrixInformationSecurity"
-    echo " - Wipro: https://www.youtube.com/@WiproLimited"
-    pause
+        case $choice in
+            1)
+                clear
+                echo "Problem: Disk space running out due to excessive log files or orphaned data."
+                echo "Recommended Commands:"
+                echo "  df -h"
+                echo "  du -sh /* (use with caution, can take a while)"
+                echo "  sudo apt autoremove"
+                echo "  sudo journalctl --vacuum-size=50M (adjust size as needed)"
+                echo "If problem not solved, read this: [Freeing up disk space]"
+                press_enter_to_continue
+                ;;
+            2)
+                clear
+                echo "Problem: File permissions preventing access to critical system files."
+                echo "Recommended Commands:"
+                echo "  ls -l <file_path> (replace <file_path>)"
+                echo "  sudo chmod <permissions> <file_path> (e.g., sudo chmod 644 /path/to/file)"
+                echo "  sudo chown <user>:<group> <file_path> (e.g., sudo chown root:root /path/to/file)"
+                echo "If problem not solved, read this: [Understanding Linux file permissions]"
+                press_enter_to_continue
+                ;;
+            3)
+                clear
+                echo "Problem: Corrupted file system requiring manual fsck repair."
+                echo "Recommended Commands:"
+                echo "  sudo umount /dev/sdXN (replace XN with your partition, e.g., sda1)"
+                echo "  sudo fsck -y /dev/sdXN (replace XN with your partition)"
+                echo "If problem not solved, read this: [fsck usage and recovery]"
+                press_enter_to_continue
+                ;;
+            4)
+                clear
+                echo "Problem: Mounting issues with external drives or network shares."
+                echo "Recommended Commands:"
+                echo "  dmesg | tail"
+                echo "  sudo mount -a"
+                echo "  sudo systemctl daemon-reload"
+                echo "If problem not solved, read this: [Troubleshooting mount points]"
+                press_enter_to_continue
+                ;;
+            5)
+                clear
+                echo "Problem: RAID array failures leading to data loss or degraded performance."
+                echo "Recommended Commands:"
+                echo "  sudo mdadm --detail /dev/mdX (replace X with your RAID array, e.g., md0)"
+                echo "  sudo mdadm --manage /dev/mdX --add /dev/sdY (replace X and Y with your array and failed drive)"
+                echo "If problem not solved, read this: [RAID recovery procedures]"
+                press_enter_to_continue
+                ;;
+            0)
+                break
+                ;;
+            *)
+                echo "Invalid choice. Please try again."
+                press_enter_to_continue
+                ;;
+        esac
+    done
 }
 
-# ========== MAIN MENU ==========
-main_menu() {
-    echo -e "\n${GREEN}Welcome to MR. MACHINE - The Linux Mechanic${RESET}"
-    echo "1. Manual Mode"
-    echo "2. AI Mode"
-    echo "0. Exit"
-    read -rp "Select mode: " mode
+# Function for Networking & Connectivity Issues
+function networking_menu {
+    while true; do
+        clear
+        echo "Mr. Machine Tool - Manual Mode"
+        separator
+        echo "Networking & Connectivity Issues:"
+        echo "1. No internet access due to misconfigured network interfaces."
+        echo "2. DNS resolution failures causing slow or broken connections."
+        echo "3. Firewall rules blocking legitimate traffic."
+        echo "4. SSH connection failures due to incorrect key permissions."
+        echo "5. VPN connectivity issues caused by missing dependencies."
+        echo "0. Back to Main Menu"
+        separator
+        read -p "Enter your choice: " choice
 
-    case $mode in
-        1) manual_mode ;;
-        2) ai_mode ;;
-        0) echo -e "${RED}Exiting. Stay safe!${RESET}" ;;
-        *) echo -e "${RED}Invalid choice${RESET}" ;;
-    esac
+        case $choice in
+            1)
+                clear
+                echo "Problem: No internet access due to misconfigured network interfaces."
+                echo "Recommended Commands:"
+                echo "  ip addr show"
+                echo "  ping 8.8.8.8"
+                echo "  sudo systemctl restart NetworkManager"
+                echo "If problem not solved, read this: [Network interface configuration]"
+                press_enter_to_continue
+                ;;
+            2)
+                clear
+                echo "Problem: DNS resolution failures causing slow or broken connections."
+                echo "Recommended Commands:"
+                echo "  cat /etc/resolv.conf"
+                echo "  dig google.com"
+                echo "  sudo systemctl restart systemd-resolved"
+                echo "If problem not solved, read this: [DNS troubleshooting guide]"
+                press_enter_to_continue
+                ;;
+            3)
+                clear
+                echo "Problem: Firewall rules blocking legitimate traffic."
+                echo "Recommended Commands:"
+                echo "  sudo ufw status verbose"
+                echo "  sudo iptables -L -n -v"
+                echo "If problem not solved, read this: [Firewall rule management]"
+                press_enter_to_continue
+                ;;
+            4)
+                clear
+                echo "Problem: SSH connection failures due to incorrect key permissions."
+                echo "Recommended Commands:"
+                echo "  ls -l ~/.ssh/id_rsa"
+                echo "  chmod 600 ~/.ssh/id_rsa"
+                echo "If problem not solved, read this: [SSH key permissions guide]"
+                press_enter_to_continue
+                ;;
+            5)
+                clear
+                echo "Problem: VPN connectivity issues caused by missing dependencies."
+                echo "Recommended Commands:"
+                echo "  sudo journalctl -u openvpn"
+                echo "  sudo apt install openvpn"
+                echo "If problem not solved, read this: [VPN client setup and dependencies]"
+                press_enter_to_continue
+                ;;
+            0)
+                break
+                ;;
+            *)
+                echo "Invalid choice. Please try again."
+                press_enter_to_continue
+                ;;
+        esac
+    done
+}
+
+# Function for Performance & Resource Management
+function performance_menu {
+    while true; do
+        clear
+        echo "Mr. Machine Tool - Manual Mode"
+        separator
+        echo "Performance & Resource Management:"
+        echo "1. High CPU usage due to rogue processes or misconfigured services."
+        echo "2. Memory leaks causing system slowdowns."
+        echo "3. Excessive swap usage leading to performance degradation."
+        echo "4. Slow disk I/O affecting application responsiveness."
+        echo "5. Background services consuming unnecessary resources."
+        echo "0. Back to Main Menu"
+        separator
+        read -p "Enter your choice: " choice
+
+        case $choice in
+            1)
+                clear
+                echo "Problem: High CPU usage due to rogue processes or misconfigured services."
+                echo "Recommended Commands:"
+                echo "  top"
+                echo "  htop (install if not available: sudo apt install htop)"
+                echo "  sudo kill <PID> (replace <PID> with the Process ID of the rogue process)"
+                echo "If problem not solved, read this: [Diagnosing high CPU usage]"
+                press_enter_to_continue
+                ;;
+            2)
+                clear
+                echo "Problem: Memory leaks causing system slowdowns."
+                echo "Recommended Commands:"
+                echo "  free -h"
+                echo "  ps aux --sort=-%mem"
+                echo "  sudo systemctl restart <service_name> (replace <service_name> with the service exhibiting the leak)"
+                echo "If problem not solved, read this: [Identifying memory leaks]"
+                press_enter_to_continue
+                ;;
+            3)
+                clear
+                echo "Problem: Excessive swap usage leading to performance degradation."
+                echo "Recommended Commands:"
+                echo "  swapon -s"
+                echo "  sudo sysctl vm.swappiness=10 (lowers swappiness, default is 60)"
+                echo "If problem not solved, read this: [Optimizing swap usage]"
+                press_enter_to_continue
+                ;;
+            4)
+                clear
+                echo "Problem: Slow disk I/O affecting application responsiveness."
+                echo "Recommended Commands:"
+                echo "  iostat -x (install if not available: sudo apt install sysstat)"
+                echo "  iotop (install if not available: sudo apt install iotop)"
+                echo "If problem not solved, read this: [Disk I/O performance tuning]"
+                press_enter_to_continue
+                ;;
+            5)
+                clear
+                echo "Problem: Background services consuming unnecessary resources."
+                echo "Recommended Commands:"
+                echo "  systemctl list-units --type=service --state=running"
+                echo "  sudo systemctl stop <service_name>"
+                echo "If problem not solved, read this: [Managing systemd services]"
+                press_enter_to_continue
+                ;;
+            0)
+                break
+                ;;
+            *)
+                echo "Invalid choice. Please try again."
+                press_enter_to_continue
+                ;;
+        esac
+    done
+}
+
+# Function for Security & Access Control
+function security_menu {
+    while true; do
+        clear
+        echo "Mr. Machine Tool - Manual Mode"
+        separator
+        echo "Security & Access Control:"
+        echo "1. Weak user passwords leading to unauthorized access."
+        echo "2. SELinux or AppArmor blocking legitimate applications."
+        echo "3. Misconfigured sudo permissions preventing administrative tasks."
+        echo "4. Open ports exposing the system to potential attacks."
+        echo "5. Unpatched vulnerabilities leading to security breaches."
+        echo "0. Back to Main Menu"
+        separator
+        read -p "Enter your choice: " choice
+
+        case $choice in
+            1)
+                clear
+                echo "Problem: Weak user passwords leading to unauthorized access."
+                echo "Recommended Commands:"
+                echo "  passwd (to change current user's password)"
+                echo "  sudo chage -l <username> (to check password expiry for a user)"
+                echo "If problem not solved, read this: [Strong password policies]"
+                press_enter_to_continue
+                ;;
+            2)
+                clear
+                echo "Problem: SELinux or AppArmor blocking legitimate applications."
+                echo "Recommended Commands:"
+                echo "  sudo sestatus (for SELinux)"
+                echo "  sudo audit2allow -a (for SELinux, to generate allow rules)"
+                echo "  sudo aa-status (for AppArmor)"
+                echo "If problem not solved, read this: [SELinux troubleshooting], [AppArmor policy creation]"
+                press_enter_to_continue
+                ;;
+            3)
+                clear
+                echo "Problem: Misconfigured sudo permissions preventing administrative tasks."
+                echo "Recommended Commands:"
+                echo "  sudo -l (to list your sudo privileges)"
+                echo "  pkexec id (alternative to sudo for graphical applications)"
+                echo "If problem not solved, read this: [Understanding sudoers file]"
+                press_enter_to_continue
+                ;;
+            4)
+                clear
+                echo "Problem: Open ports exposing the system to potential attacks."
+                echo "Recommended Commands:"
+                echo "  sudo ss -tulpn (lists TCP/UDP listening ports with process info)"
+                echo "  sudo nmap localhost (install if not available: sudo apt install nmap)"
+                echo "If problem not solved, read this: [Securing open ports]"
+                press_enter_to_continue
+                ;;
+            5)
+                clear
+                echo "Problem: Unpatched vulnerabilities leading to security breaches."
+                echo "Recommended Commands:"
+                echo "  sudo apt update && sudo apt upgrade"
+                echo "  uname -a (to check kernel version and patch level)"
+                echo "If problem not solved, read this: [Vulnerability scanning tools]"
+                press_enter_to_continue
+                ;;
+            0)
+                break
+                ;;
+            *)
+                echo "Invalid choice. Please try again."
+                press_enter_to_continue
+                ;;
+        esac
+    done
+}
+
+# Function for Software & Package Management
+function software_menu {
+    while true; do
+        clear
+        echo "Mr. Machine Tool - Manual Mode"
+        separator
+        echo "Software & Package Management:"
+        echo "1. Dependency conflicts when installing or updating packages."
+        echo "2. Broken repositories preventing software updates."
+        echo "3. Application crashes due to missing libraries."
+        echo "4. Compatibility issues with proprietary drivers."
+        echo "5. Kernel updates breaking existing configurations."
+        echo "0. Back to Main Menu"
+        separator
+        read -p "Enter your choice: " choice
+
+        case $choice in
+            1)
+                clear
+                echo "Problem: Dependency conflicts when installing or updating packages."
+                echo "Recommended Commands:"
+                echo "  sudo apt --fix-broken install"
+                echo "  sudo apt clean"
+                echo "  sudo apt update"
+                echo "If problem not solved, read this: [Resolving dependency issues]"
+                press_enter_to_continue
+                ;;
+            2)
+                clear
+                echo "Problem: Broken repositories preventing software updates."
+                echo "Recommended Commands:"
+                echo "  sudo apt update (check for errors)"
+                echo "  cat /etc/apt/sources.list"
+                echo "  sudo add-apt-repository --remove <repository> (replace <repository> with the problematic one)"
+                echo "If problem not solved, read this: [Fixing broken APT repositories]"
+                press_enter_to_continue
+                ;;
+            3)
+                clear
+                echo "Problem: Application crashes due to missing libraries."
+                echo "Recommended Commands:"
+                echo "  ldd <application_binary> (replace <application_binary> with the path to the executable)"
+                echo "  sudo apt install <missing_library>"
+                echo "If problem not solved, read this: [Troubleshooting missing libraries]"
+                press_enter_to_continue
+                ;;
+            4)
+                clear
+                echo "Problem: Compatibility issues with proprietary drivers."
+                echo "Recommended Commands:"
+                echo "  lspci -k (to identify hardware and current kernel driver)"
+                echo "  sudo ubuntu-drivers autoinstall (for Ubuntu-based systems)"
+                echo "If problem not solved, read this: [Installing proprietary drivers]"
+                press_enter_to_continue
+                ;;
+            5)
+                clear
+                echo "Problem: Kernel updates breaking existing configurations."
+                echo "Recommended Commands:"
+                echo "  sudo apt-get purge linux-image-unsigned-$(uname -r) (uninstall current kernel, use with caution!)"
+                echo "  sudo update-grub (after uninstalling a kernel)"
+                echo "If problem not solved, read this: [Rolling back kernel updates]"
+                press_enter_to_continue
+                ;;
+            0)
+                break
+                ;;
+            *)
+                echo "Invalid choice. Please try again."
+                press_enter_to_continue
+                ;;
+        esac
+    done
+}
+
+# Main Menu
+function main_menu {
+    while true; do
+        clear
+        echo "Welcome to Mr. Machine Tool system!"
+        separator
+        echo "Please select a mode:"
+        echo "1. AI"
+        echo "2. Manual"
+        echo "0. Exit"
+        separator
+        read -p "Enter your choice: " mode_choice
+
+        case $mode_choice in
+            1)
+                ai_mode
+                ;;
+            2)
+                while true; do
+                    clear
+                    echo "Mr. Machine Tool - Manual Mode"
+                    separator
+                    echo "Main Troubleshooting Menu:"
+                    echo "1. System & Boot Issues"
+                    echo "2. File System & Storage Problems"
+                    echo "3. Networking & Connectivity Issues"
+                    echo "4. Performance & Resource Management"
+                    echo "5. Security & Access Control"
+                    echo "6. Software & Package Management"
+                    echo "0. Exit"
+                    separator
+                    read -p "Enter your choice: " category_choice
+
+                    case $category_choice in
+                        1) system_boot_menu ;;
+                        2) file_system_menu ;;
+                        3) networking_menu ;;
+                        4) performance_menu ;;
+                        5) security_menu ;;
+                        6) software_menu ;;
+                        0)
+                            echo "Exiting Mr. Machine Tool. Goodbye!"
+                            exit 0
+                            ;;
+                        *)
+                            echo "Invalid choice. Please try again."
+                            press_enter_to_continue
+                            ;;
+                    esac
+                done
+                ;;
+            0)
+                echo "Exiting Mr. Machine Tool. Goodbye!"
+                exit 0
+                ;;
+            *)
+                echo "Invalid choice. Please try again."
+                press_enter_to_continue
+                ;;
+        esac
+    done
 }
 
 # Start the script
