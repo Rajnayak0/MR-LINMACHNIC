@@ -1,8 +1,8 @@
 # MR-LINMACHNIC 🛠️
 
-> **MR. MACHINE - by Madan Raj**
+> **Mr. LinMachine E - by Madan Raj**
 
-# Mr. Machine Tool - Manual Mode
+# Mr. LinMachine  - Manual Mode
 
 "Mr. Machine Tool" is an interactive troubleshooting guide designed to help users diagnose and resolve common Linux system issues. This repository contains the Bash script for the "Manual Mode" of the system, offering a structured approach to problem-solving.
 
