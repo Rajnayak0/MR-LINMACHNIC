@@ -6,8 +6,6 @@
 # Linux Diagnostic and Repair Toolkit
 # For Kali Linux (VirtualBox), WSL, and Native Linux
 
-#!/bin/bash
-
 # Mr. Machine Tool - Manual Mode
 # An interactive troubleshooting guide for common Linux system issues.
 
@@ -25,6 +23,14 @@ function press_enter_to_continue {
 function ai_mode {
     echo "Please explain your context for AI analysis."
     exit 0
+}
+
+# Function to execute a command and display its output
+function run_command {
+    echo "Executing: $1"
+    echo "Command Output:"
+    eval "$1" 2>&1 | sed 's/^/  /' # Indent output and redirect stderr to stdout
+    echo "--- End of command output ---"
 }
 
 # Function for System & Boot Issues
@@ -47,48 +53,50 @@ function system_boot_menu {
             1)
                 clear
                 echo "Problem: System fails to boot due to corrupted GRUB configuration."
-                echo "Recommended Commands:"
-                echo "  sudo grub-install /dev/sdX (replace X with your boot drive, e.g., sda)"
+                echo "This issue often requires manual intervention with device paths."
+                echo "Please verify your boot drive (e.g., sda, sdb) before executing these commands."
+                echo "To resolve, you might need to run (replace X with your boot drive):"
+                echo "  sudo grub-install /dev/sdX"
                 echo "  sudo update-grub"
-                echo "If problem not solved, read this: [GRUB troubleshooting guide]"
+                echo "If problem not solved, read this: https://wiki.ubuntu.com/Grub2/Troubleshooting"
                 press_enter_to_continue
                 ;;
             2)
                 clear
                 echo "Problem: Kernel panic caused by incompatible drivers or missing modules."
-                echo "Recommended Commands:"
-                echo "  sudo dmesg | grep -i \"panic\""
-                echo "  sudo apt update && sudo apt upgrade (to update kernel and drivers)"
-                echo "  sudo mkinitramfs -o /boot/initrd.img-$(uname -r) $(uname -r)"
-                echo "If problem not solved, read this: [Kernel panic diagnostic tips], [Driver installation guide]"
+                echo "Attempting to run diagnostic commands..."
+                run_command "sudo dmesg | grep -i \"panic\""
+                echo "To update kernel and drivers (requires reboot): sudo apt update && sudo apt upgrade"
+                echo "To recreate initramfs (replace $(uname -r) with current kernel version if different): sudo mkinitramfs -o /boot/initrd.img-$(uname -r) $(uname -r)"
+                echo "If problem not solved, read this: https://www.kernel.org/doc/Documentation/admin-guide/bug-hunting.rst, https://wiki.archlinux.org/title/Kernel_panic"
                 press_enter_to_continue
                 ;;
             3)
                 clear
                 echo "Problem: Slow boot times due to unnecessary services running at startup."
-                echo "Recommended Commands:"
-                echo "  systemd-analyze blame"
-                echo "  sudo systemctl disable <service_name> (replace <service_name> with the service you want to disable)"
-                echo "If problem not solved, read this: [Optimizing boot times]"
+                echo "Attempting to run diagnostic commands..."
+                run_command "systemd-analyze blame | head -n 10" # Show top 10 slowest units
+                echo "To disable a service, run: sudo systemctl disable <service_name> (replace <service_name> with one from the list above)"
+                echo "If problem not solved, read this: https://ostechnix.com/speed-up-boot-time-in-linux-using-systemd-analyze/"
                 press_enter_to_continue
                 ;;
             4)
                 clear
                 echo "Problem: Incorrect time settings due to misconfigured NTP or system clock."
-                echo "Recommended Commands:"
-                echo "  timedatectl status"
-                echo "  sudo timedatectl set-ntp true"
-                echo "  sudo timedatectl set-timezone Asia/Kolkata (or appropriate timezone, e.g., America/New_York)"
-                echo "If problem not solved, read this: [NTP configuration guide]"
+                echo "Attempting to run diagnostic commands..."
+                run_command "timedatectl status"
+                echo "To enable NTP sync: sudo timedatectl set-ntp true"
+                echo "To set timezone (e.g., Asia/Kolkata, America/New_York): sudo timedatectl set-timezone Asia/Kolkata"
+                echo "If problem not solved, read this: https://www.digitalocean.com/community/tutorials/how-to-set-up-time-synchronization-with-ntp-on-ubuntu-18-04"
                 press_enter_to_continue
                 ;;
             5)
                 clear
                 echo "Problem: System hanging during shutdown due to unresponsive processes."
-                echo "Recommended Commands:"
-                echo "  sudo journalctl -xb | grep -i \"shutdown\""
-                echo "  sudo pkill -9 <process_ID> (as a last resort, replace <process_ID>)"
-                echo "If problem not solved, read this: [Troubleshooting shutdown issues]"
+                echo "Attempting to run diagnostic commands..."
+                run_command "sudo journalctl -xb | grep -i \"shutdown\" | tail -n 20" # Show recent shutdown logs
+                echo "As a last resort for an unresponsive process, you can kill it with: sudo pkill -9 <process_ID>"
+                echo "If problem not solved, read this: https://unix.stackexchange.com/questions/27653/how-to-debug-a-hanging-shutdown"
                 press_enter_to_continue
                 ;;
             0)
@@ -122,50 +130,58 @@ function file_system_menu {
             1)
                 clear
                 echo "Problem: Disk space running out due to excessive log files or orphaned data."
-                echo "Recommended Commands:"
-                echo "  df -h"
-                echo "  du -sh /* (use with caution, can take a while)"
+                echo "Attempting to run diagnostic commands..."
+                run_command "df -h"
+                run_command "sudo du -sh /var/log/*" # Check log file sizes specifically
+                echo "To free up space:"
                 echo "  sudo apt autoremove"
-                echo "  sudo journalctl --vacuum-size=50M (adjust size as needed)"
-                echo "If problem not solved, read this: [Freeing up disk space]"
+                echo "  sudo journalctl --vacuum-size=50M (adjust size as needed, e.g., 1G)"
+                echo "Consider using 'du -h --max-depth=1 /' to find large directories, but be aware it can take time."
+                echo "If problem not solved, read this: https://www.howtogeek.com/118314/4-ways-to-free-up-disk-space-on-linux/"
                 press_enter_to_continue
                 ;;
             2)
                 clear
                 echo "Problem: File permissions preventing access to critical system files."
-                echo "Recommended Commands:"
-                echo "  ls -l <file_path> (replace <file_path>)"
-                echo "  sudo chmod <permissions> <file_path> (e.g., sudo chmod 644 /path/to/file)"
-                echo "  sudo chown <user>:<group> <file_path> (e.g., sudo chown root:root /path/to/file)"
-                echo "If problem not solved, read this: [Understanding Linux file permissions]"
+                echo "To diagnose, you need to specify the file path (e.g., /etc/fstab)."
+                echo "Run: ls -l <file_path>"
+                echo "To change permissions: sudo chmod <permissions> <file_path> (e.g., sudo chmod 644 /path/to/file)"
+                echo "To change ownership: sudo chown <user>:<group> <file_path> (e.g., sudo chown root:root /path/to/file)"
+                echo "If problem not solved, read this: https://www.redhat.com/sysadmin/linux-file-permissions-basics"
                 press_enter_to_continue
                 ;;
             3)
                 clear
                 echo "Problem: Corrupted file system requiring manual fsck repair."
-                echo "Recommended Commands:"
-                echo "  sudo umount /dev/sdXN (replace XN with your partition, e.g., sda1)"
-                echo "  sudo fsck -y /dev/sdXN (replace XN with your partition)"
-                echo "If problem not solved, read this: [fsck usage and recovery]"
+                echo "This requires unmounting the partition and knowing its exact device path (e.g., /dev/sda1)."
+                echo "DO NOT run fsck on a mounted partition as it can cause data loss."
+                echo "Steps:"
+                echo "  1. Boot from a live USB/CD."
+                echo "  2. Identify the partition: lsblk"
+                echo "  3. Unmount if necessary: sudo umount /dev/sdXN (replace XN with your partition)"
+                echo "  4. Run fsck: sudo fsck -y /dev/sdXN"
+                echo "If problem not solved, read this: https://www.cyberciti.biz/faq/unix-linux-check-repair-filesystem-fsck-command/"
                 press_enter_to_continue
                 ;;
             4)
                 clear
                 echo "Problem: Mounting issues with external drives or network shares."
-                echo "Recommended Commands:"
-                echo "  dmesg | tail"
-                echo "  sudo mount -a"
-                echo "  sudo systemctl daemon-reload"
-                echo "If problem not solved, read this: [Troubleshooting mount points]"
+                echo "Attempting to run diagnostic commands..."
+                run_command "dmesg | tail -n 20" # Show recent kernel messages for mount errors
+                echo "To try remounting all entries in /etc/fstab: sudo mount -a"
+                echo "To reload systemd daemon configuration: sudo systemctl daemon-reload"
+                echo "If problem not solved, read this: https://www.linuxshelltips.com/troubleshoot-mount-problems-linux/"
                 press_enter_to_continue
                 ;;
             5)
                 clear
                 echo "Problem: RAID array failures leading to data loss or degraded performance."
-                echo "Recommended Commands:"
-                echo "  sudo mdadm --detail /dev/mdX (replace X with your RAID array, e.g., md0)"
-                echo "  sudo mdadm --manage /dev/mdX --add /dev/sdY (replace X and Y with your array and failed drive)"
-                echo "If problem not solved, read this: [RAID recovery procedures]"
+                echo "This requires knowing your RAID array (e.g., /dev/md0) and failed drive (e.g., /dev/sdY)."
+                echo "Attempting to run diagnostic commands..."
+                run_command "sudo mdadm --detail --scan" # List all detected RAID arrays
+                echo "To check a specific array (replace X): sudo mdadm --detail /dev/mdX"
+                echo "To add a new drive to a degraded array (replace X and Y): sudo mdadm --manage /dev/mdX --add /dev/sdY"
+                echo "If problem not solved, read this: https://raid.wiki.kernel.org/index.php/RAID_Recovery"
                 press_enter_to_continue
                 ;;
             0)
@@ -199,48 +215,49 @@ function networking_menu {
             1)
                 clear
                 echo "Problem: No internet access due to misconfigured network interfaces."
-                echo "Recommended Commands:"
-                echo "  ip addr show"
-                echo "  ping 8.8.8.8"
-                echo "  sudo systemctl restart NetworkManager"
-                echo "If problem not solved, read this: [Network interface configuration]"
+                echo "Attempting to run diagnostic commands..."
+                run_command "ip addr show"
+                run_command "ping -c 4 8.8.8.8" # Ping Google's DNS
+                echo "To restart NetworkManager: sudo systemctl restart NetworkManager"
+                echo "If problem not solved, read this: https://www.howtogeek.com/109041/how-to-troubleshoot-network-problems-on-linux/"
                 press_enter_to_continue
                 ;;
             2)
                 clear
                 echo "Problem: DNS resolution failures causing slow or broken connections."
-                echo "Recommended Commands:"
-                echo "  cat /etc/resolv.conf"
-                echo "  dig google.com"
-                echo "  sudo systemctl restart systemd-resolved"
-                echo "If problem not solved, read this: [DNS troubleshooting guide]"
+                echo "Attempting to run diagnostic commands..."
+                run_command "cat /etc/resolv.conf"
+                run_command "dig google.com" # Requires 'dnsutils' package
+                echo "To restart systemd-resolved (if used): sudo systemctl restart systemd-resolved"
+                echo "If problem not solved, read this: https://www.redhat.com/sysadmin/dns-troubleshooting"
                 press_enter_to_continue
                 ;;
             3)
                 clear
                 echo "Problem: Firewall rules blocking legitimate traffic."
-                echo "Recommended Commands:"
-                echo "  sudo ufw status verbose"
-                echo "  sudo iptables -L -n -v"
-                echo "If problem not solved, read this: [Firewall rule management]"
+                echo "Attempting to run diagnostic commands..."
+                run_command "sudo ufw status verbose" # If UFW is used
+                run_command "sudo iptables -L -n -v" # Show raw iptables rules
+                echo "If problem not solved, read this: https://ubuntu.com/server/docs/security-firewall-ufw, https://www.digitalocean.com/community/tutorials/how-to-list-and-delete-iptables-firewall-rules"
                 press_enter_to_continue
                 ;;
             4)
                 clear
                 echo "Problem: SSH connection failures due to incorrect key permissions."
-                echo "Recommended Commands:"
-                echo "  ls -l ~/.ssh/id_rsa"
-                echo "  chmod 600 ~/.ssh/id_rsa"
-                echo "If problem not solved, read this: [SSH key permissions guide]"
+                echo "Attempting to run diagnostic commands..."
+                run_command "ls -l ~/.ssh/id_rsa"
+                echo "Correct permissions for private key should be 600 (owner read/write only)."
+                echo "To correct permissions: chmod 600 ~/.ssh/id_rsa"
+                echo "If problem not solved, read this: https://www.ssh.com/academy/ssh/client-key-pair-permissions"
                 press_enter_to_continue
                 ;;
             5)
                 clear
                 echo "Problem: VPN connectivity issues caused by missing dependencies."
-                echo "Recommended Commands:"
-                echo "  sudo journalctl -u openvpn"
-                echo "  sudo apt install openvpn"
-                echo "If problem not solved, read this: [VPN client setup and dependencies]"
+                echo "Attempting to run diagnostic commands..."
+                run_command "sudo journalctl -u openvpn --since \"1 hour ago\" | tail -n 20" # Recent OpenVPN logs
+                echo "If OpenVPN is not installed, install it: sudo apt install openvpn"
+                echo "If problem not solved, read this: https://openvpn.net/community-resources/how-to-troubleshoot-common-openvpn-issues/"
                 press_enter_to_continue
                 ;;
             0)
@@ -274,48 +291,52 @@ function performance_menu {
             1)
                 clear
                 echo "Problem: High CPU usage due to rogue processes or misconfigured services."
-                echo "Recommended Commands:"
-                echo "  top"
-                echo "  htop (install if not available: sudo apt install htop)"
-                echo "  sudo kill <PID> (replace <PID> with the Process ID of the rogue process)"
-                echo "If problem not solved, read this: [Diagnosing high CPU usage]"
+                echo "Attempting to run diagnostic commands..."
+                run_command "top -bn1 | head -n 10" # Non-interactive top output
+                echo "For interactive monitoring, use 'top' or 'htop' (sudo apt install htop)."
+                echo "To kill a rogue process (use with caution!): sudo kill <PID>"
+                echo "If problem not solved, read this: https://www.linux.com/training-certification/sysadmin-skills-101/how-to-diagnose-high-cpu-usage-on-linux/"
                 press_enter_to_continue
                 ;;
             2)
                 clear
                 echo "Problem: Memory leaks causing system slowdowns."
-                echo "Recommended Commands:"
-                echo "  free -h"
-                echo "  ps aux --sort=-%mem"
-                echo "  sudo systemctl restart <service_name> (replace <service_name> with the service exhibiting the leak)"
-                echo "If problem not solved, read this: [Identifying memory leaks]"
+                echo "Attempting to run diagnostic commands..."
+                run_command "free -h"
+                run_command "ps aux --sort=-%mem | head -n 10" # Top 10 memory-consuming processes
+                echo "To restart a service that might be leaking memory: sudo systemctl restart <service_name>"
+                echo "If problem not solved, read this: https://www.redhat.com/sysadmin/linux-memory-leak-detection"
                 press_enter_to_continue
                 ;;
             3)
                 clear
                 echo "Problem: Excessive swap usage leading to performance degradation."
-                echo "Recommended Commands:"
-                echo "  swapon -s"
-                echo "  sudo sysctl vm.swappiness=10 (lowers swappiness, default is 60)"
-                echo "If problem not solved, read this: [Optimizing swap usage]"
+                echo "Attempting to run diagnostic commands..."
+                run_command "swapon -s"
+                run_command "cat /proc/sys/vm/swappiness" # Show current swappiness value
+                echo "To lower swappiness (e.g., to 10): sudo sysctl vm.swappiness=10"
+                echo "To make it permanent, add 'vm.swappiness=10' to /etc/sysctl.conf"
+                echo "If problem not solved, read this: https://www.redhat.com/sysadmin/swap-space-linux"
                 press_enter_to_continue
                 ;;
             4)
                 clear
                 echo "Problem: Slow disk I/O affecting application responsiveness."
-                echo "Recommended Commands:"
-                echo "  iostat -x (install if not available: sudo apt install sysstat)"
-                echo "  iotop (install if not available: sudo apt install iotop)"
-                echo "If problem not solved, read this: [Disk I/O performance tuning]"
+                echo "Attempting to run diagnostic commands..."
+                run_command "iostat -x | head -n 10" # Requires sysstat package
+                run_command "df -i" # Check inode usage
+                echo "For interactive disk I/O monitoring, use 'iotop' (sudo apt install iotop)."
+                echo "If problem not solved, read this: https://www.thegeekdiary.com/how-to-diagnose-disk-i-o-performance-issues-in-linux/"
                 press_enter_to_continue
                 ;;
             5)
                 clear
                 echo "Problem: Background services consuming unnecessary resources."
-                echo "Recommended Commands:"
-                echo "  systemctl list-units --type=service --state=running"
-                echo "  sudo systemctl stop <service_name>"
-                echo "If problem not solved, read this: [Managing systemd services]"
+                echo "Attempting to run diagnostic commands..."
+                run_command "systemctl list-units --type=service --state=running | head -n 10"
+                echo "To stop a service: sudo systemctl stop <service_name>"
+                echo "To disable a service from starting at boot: sudo systemctl disable <service_name>"
+                echo "If problem not solved, read this: https://linuxconfig.org/how-to-manage-systemd-services-on-linux"
                 press_enter_to_continue
                 ;;
             0)
@@ -349,47 +370,49 @@ function security_menu {
             1)
                 clear
                 echo "Problem: Weak user passwords leading to unauthorized access."
-                echo "Recommended Commands:"
-                echo "  passwd (to change current user's password)"
-                echo "  sudo chage -l <username> (to check password expiry for a user)"
-                echo "If problem not solved, read this: [Strong password policies]"
+                echo "To change your own password: passwd"
+                echo "To check password expiry for a specific user (replace <username>): sudo chage -l <username>"
+                echo "If problem not solved, read this: https://www.ncsc.gov.uk/collection/passwords/passwords-guidance"
                 press_enter_to_continue
                 ;;
             2)
                 clear
                 echo "Problem: SELinux or AppArmor blocking legitimate applications."
-                echo "Recommended Commands:"
-                echo "  sudo sestatus (for SELinux)"
-                echo "  sudo audit2allow -a (for SELinux, to generate allow rules)"
-                echo "  sudo aa-status (for AppArmor)"
-                echo "If problem not solved, read this: [SELinux troubleshooting], [AppArmor policy creation]"
+                echo "Attempting to run diagnostic commands..."
+                run_command "sudo sestatus" # For SELinux
+                run_command "sudo aa-status" # For AppArmor
+                echo "For SELinux, if in enforcing mode, check audit logs for denials: sudo ausearch -m AVC -ts today"
+                echo "For AppArmor, check logs: sudo journalctl -u apparmor.service"
+                echo "If problem not solved, read this: https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/7/html/selinux_users_and_administrators_guide/sect-security-enhanced_linux-troubleshooting-troubleshooting_steps.html, https://ubuntu.com/server/docs/security-apparmor"
                 press_enter_to_continue
                 ;;
             3)
                 clear
                 echo "Problem: Misconfigured sudo permissions preventing administrative tasks."
-                echo "Recommended Commands:"
-                echo "  sudo -l (to list your sudo privileges)"
-                echo "  pkexec id (alternative to sudo for graphical applications)"
-                echo "If problem not solved, read this: [Understanding sudoers file]"
+                echo "Attempting to run diagnostic commands..."
+                run_command "sudo -l" # Lists your sudo privileges
+                run_command "pkexec id" # Alternative for graphical auth, if pkexec is installed
+                echo "To edit sudoers file (use 'visudo' for safety): sudo visudo"
+                echo "If problem not solved, read this: https://www.digitalocean.com/community/tutorials/how-to-edit-the-sudoers-file-on-ubuntu-and-centos"
                 press_enter_to_continue
                 ;;
             4)
                 clear
                 echo "Problem: Open ports exposing the system to potential attacks."
-                echo "Recommended Commands:"
-                echo "  sudo ss -tulpn (lists TCP/UDP listening ports with process info)"
-                echo "  sudo nmap localhost (install if not available: sudo apt install nmap)"
-                echo "If problem not solved, read this: [Securing open ports]"
+                echo "Attempting to run diagnostic commands..."
+                run_command "sudo ss -tulpn" # Lists TCP/UDP listening ports with process info
+                run_command "sudo nmap localhost" # Requires nmap package
+                echo "If problem not solved, read this: https://www.redhat.com/sysadmin/checking-open-ports-linux"
                 press_enter_to_continue
                 ;;
             5)
                 clear
                 echo "Problem: Unpatched vulnerabilities leading to security breaches."
-                echo "Recommended Commands:"
-                echo "  sudo apt update && sudo apt upgrade"
-                echo "  uname -a (to check kernel version and patch level)"
-                echo "If problem not solved, read this: [Vulnerability scanning tools]"
+                echo "Attempting to run diagnostic commands..."
+                run_command "sudo apt update && sudo apt list --upgradable"
+                run_command "uname -a" # Check kernel version for known vulnerabilities
+                echo "To apply all pending updates: sudo apt upgrade"
+                echo "If problem not solved, read this: https://ubuntu.com/security/cves, https://www.linux.com/training-certification/linux-security-basics-how-to-keep-your-system-safe/"
                 press_enter_to_continue
                 ;;
             0)
@@ -423,48 +446,52 @@ function software_menu {
             1)
                 clear
                 echo "Problem: Dependency conflicts when installing or updating packages."
-                echo "Recommended Commands:"
-                echo "  sudo apt --fix-broken install"
-                echo "  sudo apt clean"
-                echo "  sudo apt update"
-                echo "If problem not solved, read this: [Resolving dependency issues]"
+                echo "Attempting to run diagnostic commands..."
+                run_command "sudo apt update"
+                echo "To fix broken packages: sudo apt --fix-broken install"
+                echo "To clean package cache: sudo apt clean"
+                echo "If problem not solved, read this: https://www.howtoforge.com/tutorial/how-to-fix-broken-packages-in-ubuntu/"
                 press_enter_to_continue
                 ;;
             2)
                 clear
                 echo "Problem: Broken repositories preventing software updates."
-                echo "Recommended Commands:"
-                echo "  sudo apt update (check for errors)"
-                echo "  cat /etc/apt/sources.list"
-                echo "  sudo add-apt-repository --remove <repository> (replace <repository> with the problematic one)"
-                echo "If problem not solved, read this: [Fixing broken APT repositories]"
+                echo "Attempting to run diagnostic commands..."
+                run_command "sudo apt update" # Check for errors here
+                run_command "cat /etc/apt/sources.list"
+                run_command "grep -r ^deb /etc/apt/sources.list.d/" # Check additional repo files
+                echo "To remove a problematic repository (replace <repository>): sudo add-apt-repository --remove <repository>"
+                echo "If problem not solved, read this: https://linuxhint.com/fix-broken-apt-repositories-ubuntu/"
                 press_enter_to_continue
                 ;;
             3)
                 clear
                 echo "Problem: Application crashes due to missing libraries."
-                echo "Recommended Commands:"
-                echo "  ldd <application_binary> (replace <application_binary> with the path to the executable)"
-                echo "  sudo apt install <missing_library>"
-                echo "If problem not solved, read this: [Troubleshooting missing libraries]"
+                echo "You need to specify the application binary path (e.g., /usr/bin/firefox)."
+                echo "Run: ldd <application_binary>"
+                echo "To install missing library (replace <missing_library>): sudo apt install <missing_library>"
+                echo "If problem not solved, read this: https://www.baeldung.com/linux/ldd-command-missing-shared-libraries"
                 press_enter_to_continue
                 ;;
             4)
                 clear
                 echo "Problem: Compatibility issues with proprietary drivers."
-                echo "Recommended Commands:"
-                echo "  lspci -k (to identify hardware and current kernel driver)"
-                echo "  sudo ubuntu-drivers autoinstall (for Ubuntu-based systems)"
-                echo "If problem not solved, read this: [Installing proprietary drivers]"
+                echo "Attempting to run diagnostic commands..."
+                run_command "lspci -k | grep -EA3 'VGA|3D|Display|Kernel driver in use'" # Identify graphics card and driver
+                run_command "sudo ubuntu-drivers list" # For Ubuntu-based systems
+                echo "To autoinstall recommended drivers (for Ubuntu): sudo ubuntu-drivers autoinstall"
+                echo "If problem not solved, read this: https://linuxconfig.org/how-to-install-nvidia-drivers-on-ubuntu-22-04-jammy-jellyfish-linux"
                 press_enter_to_continue
                 ;;
             5)
                 clear
                 echo "Problem: Kernel updates breaking existing configurations."
-                echo "Recommended Commands:"
-                echo "  sudo apt-get purge linux-image-unsigned-$(uname -r) (uninstall current kernel, use with caution!)"
-                echo "  sudo update-grub (after uninstalling a kernel)"
-                echo "If problem not solved, read this: [Rolling back kernel updates]"
+                echo "This is a sensitive operation. Proceed with extreme caution."
+                echo "To list installed kernels: dpkg -l | grep linux-image"
+                echo "To boot into an older kernel: Select it from the GRUB menu during startup."
+                echo "To remove a specific kernel (replace version): sudo apt-get purge linux-image-unsigned-<version>"
+                echo "After removing a kernel, update GRUB: sudo update-grub"
+                echo "If problem not solved, read this: https://www.itzgeek.com/how-to/linux/how-to-uninstall-old-kernels-in-ubuntu-debian-linux.html"
                 press_enter_to_continue
                 ;;
             0)
@@ -496,6 +523,14 @@ function main_menu {
                 ai_mode
                 ;;
             2)
+                clear
+                echo "Entering Mr. Machine Tool - Manual Mode."
+                echo "NOTE: Some diagnostic commands will be executed automatically."
+                echo "For commands requiring 'sudo', you may be prompted for your password."
+                echo "Commands that require specific user input (e.g., device paths, service names)"
+                echo "will be presented for manual execution with clear instructions."
+                press_enter_to_continue
+
                 while true; do
                     clear
                     echo "Mr. Machine Tool - Manual Mode"
@@ -543,3 +578,4 @@ function main_menu {
 
 # Start the script
 main_menu
+
