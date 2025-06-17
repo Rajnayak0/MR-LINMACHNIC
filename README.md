@@ -72,5 +72,7 @@ To run the "Mr. Machine Tool" script, execute it from your terminal:
 ```bash
 chmod +x mr-machine
 ./mr-machine
+```
 
-**We highly recommend setting up MR-LINMACHNIC as a go-to tool in your Linux environment. It can be a great help for quick diagnostics and troubleshooting common system issues whenever you need it. Consider adding it to your path or creating an alias for even easier access!**
+
+(**We highly recommend setting up MR-LINMACHNIC as a go-to tool in your Linux environment. It can be a great help for quick diagnostics and troubleshooting common system issues whenever you need it. Consider adding it to your path or creating an alias for even easier access!**)
