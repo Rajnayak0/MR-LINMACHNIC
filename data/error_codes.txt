@@ -1,0 +1,67 @@
+# MR-LINMACHNIC Error Pattern Database
+# Format: CODE|CATEGORY|PATTERN|SEVERITY|SOLUTION
+#
+# This database is used by the AI engine for pattern matching.
+# Each line represents one error pattern.
+#==============================================================================
+
+# ── Out of Memory ──
+OOM001|OOM|Out of memory|CRITICAL|Kill memory hog process, add swap
+OOM002|OOM|oom-killer|CRITICAL|Increase memory or add swap
+OOM003|OOM|Cannot allocate memory|HIGH|Check memory usage with free -h
+OOM004|OOM|memory allocation failed|HIGH|Check for memory leaks
+
+# ── Disk Issues ──
+DSK001|DISK|No space left on device|CRITICAL|Clean logs, remove cache, apt clean
+DSK002|DISK|I/O error|CRITICAL|Check disk SMART data, may be failing
+DSK003|DISK|filesystem error|HIGH|Run fsck on the affected partition
+DSK004|DISK|read-only filesystem|CRITICAL|Remount rw or check hardware
+DSK005|DISK|bad superblock|CRITICAL|Use backup superblock with e2fsck
+
+# ── Network Issues ──
+NET001|NETWORK|Network is unreachable|HIGH|Check routing and network config
+NET002|NETWORK|connection refused|MEDIUM|Service not running on target port
+NET003|NETWORK|DNS resolution failed|HIGH|Check /etc/resolv.conf
+NET004|NETWORK|No route to host|HIGH|Check firewall and routing table
+NET005|NETWORK|connection timed out|MEDIUM|Check firewall, network path
+
+# ── Boot Issues ──
+BOT001|BOOT|kernel panic|CRITICAL|Boot older kernel, check hardware
+BOT002|BOOT|initramfs|HIGH|Rebuild with update-initramfs -u
+BOT003|BOOT|grub error|CRITICAL|Reinstall GRUB bootloader
+BOT004|BOOT|boot failure|CRITICAL|Check fstab, GRUB config
+
+# ── Service Issues ──
+SVC001|SERVICE|Failed to start|HIGH|Check service config and logs
+SVC002|SERVICE|segfault|CRITICAL|Check for software bugs, core dumps
+SVC003|SERVICE|daemon crashed|HIGH|Restart service, check resource limits
+SVC004|SERVICE|service timeout|MEDIUM|Increase timeout or check deps
+
+# ── Authentication ──
+AUT001|AUTH|authentication failure|MEDIUM|Check credentials, PAM config
+AUT002|AUTH|Failed password|MEDIUM|Possible brute force, use fail2ban
+AUT003|AUTH|permission denied|MEDIUM|Check file permissions and ownership
+AUT004|AUTH|access denied|MEDIUM|Check ACLs and SELinux context
+
+# ── GPU Issues ──
+GPU001|GPU|gpu error|HIGH|Reinstall GPU drivers
+GPU002|GPU|nvidia failed|HIGH|Check nvidia-smi, reinstall driver
+GPU003|GPU|xorg error|HIGH|Check Xorg log, add nomodeset
+GPU004|GPU|display driver|MEDIUM|Update or reinstall display driver
+
+# ── USB Issues ──
+USB001|USB|usb error|MEDIUM|Try different port, check dmesg
+USB002|USB|device not accepting|HIGH|Reset USB, check power management
+USB003|USB|descriptor read error|MEDIUM|Try different cable, check hardware
+
+# ── Filesystem Issues ──
+FS001|FS|ext4 error|CRITICAL|Run e2fsck on affected partition
+FS002|FS|xfs error|CRITICAL|Run xfs_repair
+FS003|FS|corrupt|CRITICAL|Backup data, run filesystem check
+FS004|FS|bad block|HIGH|Check disk health with smartctl
+
+# ── Kernel Issues ──
+KRN001|KERNEL|BUG:|CRITICAL|Check kernel version, update kernel
+KRN002|KERNEL|oops|HIGH|Check hardware, update kernel modules
+KRN003|KERNEL|soft lockup|HIGH|Check CPU load, possible hang
+KRN004|KERNEL|WARNING.*CPU|MEDIUM|Monitor CPU, check thermal
